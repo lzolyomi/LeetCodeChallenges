@@ -3,7 +3,6 @@
 ################# Day 1 #####################
 #############################################
 from typing import List
-from tqdm import tqdm
 
 
 def readData(path: str) -> List:
