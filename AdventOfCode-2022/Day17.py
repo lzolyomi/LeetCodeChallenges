@@ -178,66 +178,6 @@ class Tetris:
             self.height[x] = max(self.height[x], y + 1)
         return tuple([self.relative_tower_height, shape, self.jet_index])
 
-    def find_cycle(self, max_round):
-        """
-        Used to find cycles in the tetris with the following process:
-        - Initialize a new game of tetris
-            - for each placed rock, store: (relative_height, rock_shape, jet_index) as keys
-                                 and: # rocks placed so far & height of tower as values
-            - after placing each rock, check if this state has occured previously:
-                if so: calculate height and # rocks in cycle
-                       calculate 'beginning' height and # rocks
-                    calculate how many times the cycle can fit into our searched range
-                    using # rocks from above: rem = begin.rocks + x * cycle.rocks
-                                               ^         ^        ^
-                           # rocks still needed|#r before cycle| number of cycles that fit into max_range
-
-        """
-        shape_index = 0
-        ### Initialize a new game starting at the beginning
-        rock_count = 0  # rocks dropped into the game so far
-        for roun in range(max_round):
-            assert self.jet_index in range(
-                len(self.directions)
-            ), "Jet direction index invalid!"
-            # read the next direction in the jetstream
-            if shape_index > 4:  # restart shapes from beginning
-                shape_index = 0
-            # init new rock with given shape and 3 levels above max height
-            # then place in the corresponding place
-            state = self.single_rock(shape_index)
-            rock_count += 1
-            if rock_count >= max_round:
-                print(
-                    f"NO CYCLE FOUND UNTIL END OF {max_round} cycles, final tower height={self.max_height}"
-                )
-                break
-            if state in self.states:  # CYCLE FOUND
-
-                num_rocks, height = self.states[state]
-                # #rocks in the found cycle
-                cycle_num_rocks = roun - num_rocks
-                # height of the cycle
-                cycle_height = self.max_height - height
-                # height before the cycle detected
-                begin_height = height
-                # #rocks before the cycle detected
-                begin_rocks = num_rocks
-                num_cycles = (max_round - begin_rocks) // cycle_num_rocks
-                remainder_rocks = max_round - (
-                    begin_rocks + num_cycles * cycle_num_rocks
-                )
-                ############ Play remainder of the game ########################
-                height_before = self.max_height
-                self.savepoint = self.game_board.copy()
-                height_after = self.play_game(remainder_rocks, shape_index)
-                rem_height = height_after - height_before
-                total_height = begin_height + rem_height + num_cycles * cycle_height
-                break
-            else:  # store state
-                self.states[state] = (rock_count, self.max_height)
-            shape_index += 1
-
     def play_game(
         self,
         rounds: int,
@@ -277,7 +217,6 @@ class Tetris:
             shape_index += 1
             #### Modifications for Part 2
             if not cycle_found:
-                print(f"NO CYCLE AT ROUND {roun}")
                 if state not in self.states:  # no cycle found yet
                     self.states[state] = tuple([roun, self.max_height])
 
